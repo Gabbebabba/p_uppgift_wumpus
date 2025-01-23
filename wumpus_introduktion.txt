@@ -1,0 +1,16 @@
+ Du befinner dig i kulvertarna under D-huset, där den glupske Wumpus
+ bor. För att undvika att bli uppäten måste du skjuta Wumpus med din
+ pil och båge. Kulvertarna har ett antal rum som är förenade med smala
+ gångar. Du kan röra dig åt norr, öster, söder eller väster från ett
+ rum till ett annat.
+ Här finns dock faror som lurar. I vissa rum finns bottenlösa hal. Kliver
+ du ner i ett sådant dör du omedelbart. I andra rum finns fladdermöss
+ som lyfter upp dig, flyger en bit och släpper dig i ett godtyckligt
+ rum. I ett av rummen finns Wumpus, och om du vågar dig in i det rummet
+ blir du genast uppäten. Som tur är kan du från rummen bredvid känna
+ vinddraget från ett avgrundshål eller lukten av Wumpus. Du får också
+ i varje rum reda på vilka rum som ligger intill.
+ För att vinna spelet måste du skjuta Wumpus. När du skjuter iväg en
+ pil förflyttar den sig genom tre rum- du kan styra vilken riktning
+ pilen ska välja i varje rum. Glöm inte bort att tunnlarna vindlar sig
+ Du har fem pilar. Lycka till!
