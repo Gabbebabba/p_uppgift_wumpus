@@ -1,0 +1,319 @@
+import random as rand
+import time
+import os
+import platform
+
+def rensa_terminalen():
+    if platform.system() == "Windows":
+        os.system('cls')
+    else:
+        os.system('clear')
+        
+def är_användaren_redo():
+    input("Tryck på enter för att forsätta king 💅")
+
+class Spelare:
+    def __init__(self, spelare: str, karta: list, rums_karta: list, wumpus: "Wumpus", position: list = [0, 0], status: bool = True, pilar: int = 5):
+        self.status = status
+        self.spelare = spelare
+        self.karta = karta           
+        self.rums_karta = rums_karta     
+        self.position = position
+        self.pilar = pilar
+        self.wumpus = wumpus
+
+    def flytta_objekt(self, väderstreck: str,):
+        x, y = self.position
+
+        if väderstreck == "N":
+            nytt_x, nytt_y = x - 1, y
+        elif väderstreck == "S":
+            nytt_x, nytt_y = x + 1, y
+        elif väderstreck == "V":
+            nytt_x, nytt_y = x, y - 1
+        elif väderstreck == "Ö":
+            nytt_x, nytt_y = x, y + 1
+        else:
+            print("Du kan endast förflytta dig med kommandon N/S/V/Ö. 🤣")
+            return  
+
+        if 0 <= nytt_x < 8 and 0 <= nytt_y < 7:
+            if [nytt_x, nytt_y] == self.wumpus.position: 
+                self.position = [nytt_x, nytt_y]
+                print("Du gick in Wumpus, han käkade upp dig. Du var god.")
+                self.status = False
+                return
+            
+            else:
+                self.position = [nytt_x, nytt_y]
+                print(f"Du har flyttat till {self.position} (rum {self.rums_karta[nytt_x][nytt_y]}).")
+        else:
+            print("Du försöker gå in i en vägg... spelet är inte så stressfullt. ☜(ﾟヮﾟ☜)")
+            return  
+
+        
+        self.omkringliggande_rum()
+        self.kolla_fladdermus()
+        self.kolla_bottomlöst_hål()
+        self.kolla_wumpus()
+
+    def omkringliggande_rum(self):
+        x, y = self.position
+        riktningar = [(-1, 0), (1, 0), (0, -1), (0, 1)]   
+        rum_omkring_spelare = []    
+        
+        nuvarande_x = x  
+        nuvarande_y = y  
+      
+        for riktning in riktningar:       
+            vertikal_riktning = riktning[0]
+            horisontell_riktning = riktning[1]
+            
+            ny_x = nuvarande_x + vertikal_riktning
+            ny_y = nuvarande_y + horisontell_riktning
+        
+            if 0 <= ny_x < 8 and 0 <= ny_y < 7:        
+                rumsnummer = self.rums_karta[ny_x][ny_y]              
+                rum_omkring_spelare.append(rumsnummer)
+                
+            radera_dubletter_av_rum = list(set(rum_omkring_spelare))
+            
+            radera_dubletter_av_rum.sort()
+        print("Härifrån kan man komma till följande rum:", ' '.join(map(str, radera_dubletter_av_rum)))
+
+    def kolla_fladdermus(self):
+        x, y = self.position
+        karta = self.karta
+
+        
+        if x > 0 and karta[x-1][y] == "F":
+            print("Du hör Fladdermöss.")
+        if x < len(karta) - 1 and karta[x+1][y] == "F":
+            print("Du hör Fladdermöss.")
+        if y > 0 and karta[x][y-1] == "F":
+            print("Du hör Fladdermöss.")
+        if y < len(karta[0]) - 1 and karta[x][y+1] == "F":
+            print("Du hör Fladdermöss.")
+        
+        if karta[x][y] == "F":
+            print("Du känner fladdermusvingar mot kinden och lyfts uppåt 🤑")
+            self.fladdermus_flytta()
+
+    def fladdermus_flytta(self):
+        while True:
+            nytt_x = rand.randint(0, 7)
+            nytt_y = rand.randint(0, 6)
+            
+            if self.karta[nytt_x][nytt_y] not in ["F", "H", "W"]:
+                self.position = [nytt_x, nytt_y]
+                print(f"Du blev flyttad till {self.position} (rum {self.rums_karta[nytt_x][nytt_y]}).")
+                
+                self.omkringliggande_rum()
+                break
+
+    def skjuta_pil(self):
+        if self.pilar <= 0:
+            print("Du har inga pilar kvar loser 😭🙏")
+            return
+
+        print(f"Du har {self.pilar} pilar, när du skjuter kan du styra pilen 3 drag m.h.a N/S/V/Ö")
+        pil_position = [self.position[0], self.position[1]]
+
+        for i in range(3):  
+            väderstreck = input(f"Du kan styra pilen, {3 - i} drag kvar. Vilken riktning (N/S/V/Ö)? ").upper()
+            if väderstreck == "N":
+                nytt_x, nytt_y = pil_position[0] - 1, pil_position[1]
+            elif väderstreck == "S":
+                nytt_x, nytt_y = pil_position[0] + 1, pil_position[1]
+            elif väderstreck == "V":
+                nytt_x, nytt_y = pil_position[0], pil_position[1] - 1
+            elif väderstreck == "Ö":
+                nytt_x, nytt_y = pil_position[0], pil_position[1] + 1
+            else:
+                print("Endast N/S/V/Ö är giltiga kommandon, låt mig inte säga det igen 😡.")
+                break
+
+            if 0 <= nytt_x < 8 and 0 <= nytt_y < 7:
+                pil_position = [nytt_x, nytt_y]
+                print(f"Pilen flyttad till {pil_position}. 😈")
+                
+                if self.karta[nytt_x][nytt_y] == "W":
+                    print("Pilen träffade Wumpus! Du vinner!")
+                    self.status = False
+                    return
+            else:
+                print("Du körde in pilen i en vägg och den gick sönder...")
+                break
+
+        self.pilar -= 1
+        print(f"Du har nu {self.pilar} pilar kvar.😢")
+
+        if self.status:  
+            if self.pilar == 0:
+                print("Du har slut på pilar gubben/gumman")
+            else:
+                print("Pilen missade. Du har alltså inte vunnit lmao")
+
+    def kolla_bottomlöst_hål(self):
+        x, y = self.position
+        karta = self.karta
+
+        
+        if x > 0 and karta[x-1][y] == "H":
+            print("Du känner susningarna av ett djupt hål😨")
+        if x < len(karta) - 1 and karta[x+1][y] == "H":
+            print("Du känner susningarna av ett djupt hål😨")
+        if y > 0 and karta[x][y-1] == "H":
+            print("Du känner susningarna av ett djupt hål😨")
+        if y < len(karta[0]) - 1 and karta[x][y+1] == "H":
+            print("Du känner susningarna av ett djupt hål😨")
+        
+        if karta[x][y] == "H":
+            print("Du har gått ner i ett hål och är numera stendöd 💀")
+            self.status = False
+            
+    def kolla_wumpus(self): 
+        x, y = self.position
+        karta = self.karta
+        
+        if x > 0 and karta[x-1][y] == "W":
+            print("Du känner Wumpus vidriga lukt🤢")
+        if x < len(karta) - 1 and karta[x+1][y] == "W":
+            print("Du känner Wumpus vidriga lukt🤢")
+        if y > 0 and karta[x][y-1] == "W":
+            print("Du känner Wumpus vidriga lukt🤢")
+        if y < len(karta[0]) - 1 and karta[x][y+1] == "W":
+            print("Du känner Wumpus vidriga lukt🤢")
+
+class Wumpus:
+    def __init__(self, karta: list):
+        self.karta = karta
+        self.position = self.föd_wumpus()
+
+    def föd_wumpus(self):
+        while True:
+            x = rand.randint(0, 7)
+            y = rand.randint(0, 6)
+            if self.karta[x][y] == ".":
+                self.karta[x][y] = "W"
+                return [x, y]
+
+    def flytta_wumpus(self, spelar_position: list):
+        
+        x, y = self.position
+        self.karta[x][y] = "."  
+
+        while True:
+            wumpus_riktning = rand.choice([(-1, 0), (0, -1), (1, 0), (0, 1)])
+            steg_x, steg_y = wumpus_riktning
+            nytt_x = x + steg_x
+            nytt_y = y + steg_y
+            if 0 <= nytt_x < 8 and 0 <= nytt_y < 7:
+                
+                if [nytt_x, nytt_y] == spelar_position:
+                    print("Wumpus hittade dig och käkade upp dig. nomnomnom")
+                    self.position = [nytt_x, nytt_y]
+                    self.karta[nytt_x][nytt_y] = "W"
+                    return
+                    
+                if self.karta[nytt_x][nytt_y] == "H":
+                    continue
+                if self.karta[nytt_x][nytt_y] == "F":
+                    print(f"Wumpus åt precis en fladdermus på positionen: {nytt_x}, {nytt_y}")
+                self.karta[nytt_x][nytt_y] = "W"
+                self.position = [nytt_x, nytt_y]
+                break
+
+def generera_rumskarta():
+    rums_karta = []
+    for i in range(8):
+        rad = []
+        for j in range(7):
+            rumsnummer = rand.randint(0, 9)
+            rad.append(rumsnummer)
+        rums_karta.append(rad)
+    return rums_karta
+
+def generera_karta():
+    karta = []
+    for i in range(8):
+        rad = ["."] * 7  
+        karta.append(rad)
+    
+    antal_positioner = len(karta) * len(karta[0])
+    
+    fladdermöss_antal = antal_positioner * 30 // 100
+    for i in range(fladdermöss_antal):
+        while True:
+            x = rand.randint(0, 7)
+            y = rand.randint(0, 6)
+            if (x, y) != (0, 0) and karta[x][y] == ".":
+                karta[x][y] = "F"
+                break
+
+    bottomlöst_hål_antal = antal_positioner * 20 // 100
+    for i in range(bottomlöst_hål_antal):
+        while True:
+            x = rand.randint(0, 7)
+            y = rand.randint(0, 6)
+            if (x, y) != (0, 0) and karta[x][y] == ".":
+                karta[x][y] = "H"
+                break
+    return karta
+
+def skriv_ut_karta_på_fil(karta, rums_karta, spelar_position, wumpus_position):
+    with open("wumpus_källare.csv", "w", encoding="utf-8") as utfil:
+        for i in range(8):
+            for j in range(7):
+                position = karta[i][j]
+                if [i, j] == spelar_position: 
+                    position = "S"
+                utfil.write(f"{position}/{rums_karta[i][j]};")
+            utfil.write("\n")
+
+def vad_heter_användaren():
+    namn = input("Vad heter du? ")
+    return namn
+
+def rör_spelare(karta, rums_karta):
+    namn = vad_heter_användaren()
+    wumpus = Wumpus(karta)
+    användare = Spelare(namn, karta, rums_karta, wumpus)
+    
+    print(f"Tjenare {namn}, din startposition är {användare.position} i (rum {rums_karta[0][0]})")
+    användare.omkringliggande_rum()
+    skriv_ut_karta_på_fil(karta, rums_karta, användare.position, wumpus.position)
+    while användare.status:
+        print(f"Du står på position: {användare.position} i (rum {rums_karta[användare.position[0]][användare.position[1]]})")
+        val = input("Vill du förflytta dig eller skjuta (F/S)? ").upper()
+        
+        if val == "F":
+            riktning = input("Vart vill du förflytta dig? (N/S/V/Ö): ").upper()
+            användare.flytta_objekt(riktning)
+        elif val == "S":
+            användare.skjuta_pil()
+        else:
+            print("Du kan bara skriva F/S... PAJAS")
+            continue  
+
+        if användare.status:
+            wumpus.flytta_wumpus(användare.position)
+        
+        skriv_ut_karta_på_fil(karta, rums_karta, användare.position, wumpus.position)
+        
+        är_användaren_redo()
+        rensa_terminalen()
+
+def introducera_användare_till_spel():
+    with open("wumpus_introduktion.txt", "r", encoding="utf-8") as infil:
+        for rad in infil:
+            print(rad.strip())
+
+def main():
+    introducera_användare_till_spel()
+    rums_karta = generera_rumskarta()
+    karta = generera_karta()
+    rör_spelare(karta, rums_karta)
+
+if __name__ == "__main__":
+    main()
